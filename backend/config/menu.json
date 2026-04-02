@@ -1,0 +1,264 @@
+{
+  "_note": "The Pizza Prince — The King of Slices! | Lancaster, PA",
+  "_version": "1.0",
+  "_upsell_targets": [
+    "Upgrade to large pizza (+$4)",
+    "Add Prince Knots to any order (+$5.99)",
+    "Add extra cheese to any pizza (+$1.75)",
+    "Upgrade fries to curly fries (+$0.50)",
+    "Add a 2-liter for the family (+$4.25)"
+  ],
+
+  "weekly_special": {
+    "name": "The Weekly Decree",
+    "description": "Ask about this week's special — the Prince always has something good cooking.",
+    "note": "Update this each week. Current: Large Shredder + Prince Knots + Large Fries for $26.99"
+  },
+
+  "pizza": {
+    "_note": "Two sizes: Medium 12 inch and Large 16 inch. Build your own or pick a specialty.",
+    "sizes": {
+      "medium": { "label": "Medium (12\")", "base_price": 12.00 },
+      "large":  { "label": "Large (16\")",  "base_price": 16.00 }
+    },
+    "extra_toppings": {
+      "medium": 1.75,
+      "large":  2.00
+    },
+    "available_toppings": [
+      "Extra Cheese", "Pepperoni", "Mushrooms", "Ground Beef",
+      "Green Peppers", "Onions", "Italian Sausage", "Ham", "Bacon",
+      "Fresh Tomatoes", "Black Olives", "Jalapeños", "Pineapple",
+      "Broccoli", "Spinach", "Anchovies", "Banana Peppers"
+    ],
+    "specialty": [
+      {
+        "name": "The Shredder",
+        "description": "Our hottest pizza. Pepperoni, Italian sausage, jalapeños, banana peppers, hot sauce drizzle, and extra cheese. Not for the weak.",
+        "price": { "medium": 18.00, "large": 23.00 }
+      },
+      {
+        "name": "The Foot Clan",
+        "description": "The everything pizza. Pepperoni, sausage, ham, ground beef, bacon, mushrooms, green peppers, onions, extra cheese. An army of toppings.",
+        "price": { "medium": 19.00, "large": 24.00 }
+      },
+      {
+        "name": "The Splinter",
+        "description": "Old school and wise. Thinly sliced cheesesteak, grilled onions, and provolone on a white garlic base. A Lancaster classic.",
+        "price": { "medium": 18.00, "large": 23.00 }
+      },
+      {
+        "name": "The Leo",
+        "description": "Disciplined and clean. Ricotta, fresh mozzarella, roasted garlic, olive oil, oregano, and Parmesan. White pizza done right.",
+        "price": { "medium": 15.00, "large": 20.00 }
+      },
+      {
+        "name": "The Mikey",
+        "description": "The fun one. Ham, pineapple, extra mozzarella, and a drizzle of honey. Don't @ us — it's delicious.",
+        "price": { "medium": 15.00, "large": 20.00 }
+      },
+      {
+        "name": "The Raph",
+        "description": "Hot-headed and bold. Grilled chicken tossed in buffalo sauce, ranch drizzle, red onions, and mozzarella.",
+        "price": { "medium": 17.00, "large": 22.00 }
+      },
+      {
+        "name": "The Donatello",
+        "description": "The smart choice. Mushrooms, spinach, broccoli, roasted red peppers, black olives, fresh tomatoes, and fresh mozzarella. Full veggie.",
+        "price": { "medium": 16.00, "large": 21.00 }
+      },
+      {
+        "name": "The Casey Jones",
+        "description": "A wild card. Seasoned taco beef, sour cream base, cheddar, jalapeños, diced tomatoes, and crushed tortilla chips. Yes, really.",
+        "price": { "medium": 17.00, "large": 22.00 }
+      },
+      {
+        "name": "The April O'Neil",
+        "description": "S1E1 canon. Banana slices, Italian sausage, mozzarella, and a honey drizzle. She tried it in Turtle Tracks — the very first episode. Don't knock it till you try it.",
+        "price": { "medium": 15.00, "large": 20.00 }
+      },
+      {
+        "name": "The Turtle Tracks",
+        "description": "Named after the episode that started it all. Grilled chicken, smoky BBQ sauce, red onions, cheddar and mozzarella blend. Our crowd-pleaser for people who aren't ready for bananas on their pizza.",
+        "price": { "medium": 17.00, "large": 22.00 }
+      }
+    ]
+  },
+
+  "cheesesteaks": {
+    "_note": "All steaks on fresh-baked rolls. Sm = 8 inch, Lg = 12 inch.",
+    "items": [
+      {
+        "name": "Classic Cheesesteak",
+        "description": "Chipped steak, grilled onions, American cheese, and marinara sauce.",
+        "price": { "small": 9.50, "large": 12.50 }
+      },
+      {
+        "name": "Cheesesteak Hoagie",
+        "description": "Chipped steak, grilled onions, provolone, lettuce, tomato, and mayo. Cold side, hot steak.",
+        "price": { "small": 9.50, "large": 12.50 }
+      },
+      {
+        "name": "Chicken Cheesesteak",
+        "description": "Grilled chicken, grilled onions, American cheese, and marinara sauce.",
+        "price": { "small": 9.50, "large": 12.50 }
+      },
+      {
+        "name": "Buff Chicken Steak",
+        "description": "Grilled chicken, grilled onions, American cheese, blue cheese drizzle, and medium wing sauce.",
+        "price": { "small": 9.50, "large": 12.50 }
+      },
+      {
+        "name": "Whiz Steak",
+        "description": "Chipped steak, grilled onions, and Cheez Whiz. The Philly purist's order.",
+        "price": { "small": 9.50, "large": 12.50 }
+      },
+      {
+        "name": "Pizza Steak",
+        "description": "Chipped steak, pizza sauce, grilled onions, and melted mozzarella.",
+        "price": { "small": 9.50, "large": 12.50 }
+      },
+      {
+        "name": "The Royal Steak",
+        "description": "Our signature. Chipped steak, grilled onions, mushrooms, green peppers, provolone, and our house garlic aioli. The Prince's best.",
+        "price": { "small": 11.00, "large": 14.00 }
+      }
+    ]
+  },
+
+  "subs": {
+    "_note": "All subs on fresh-baked rolls, oven toasted. Sm = 8 inch, Lg = 12 inch.",
+    "cold": [
+      {
+        "name": "Italian",
+        "description": "Genoa salami, capicola ham, provolone, oil and vinegar, lettuce, tomato, onions.",
+        "price": { "small": 8.50, "large": 11.50 }
+      },
+      {
+        "name": "American",
+        "description": "Cooked ham, cooked salami, American cheese, oil, lettuce, tomato, onions.",
+        "price": { "small": 8.50, "large": 11.50 }
+      },
+      {
+        "name": "Turkey",
+        "description": "Sliced turkey breast, American cheese, mayo, lettuce, tomato, onions.",
+        "price": { "small": 8.50, "large": 11.50 }
+      },
+      {
+        "name": "Ham & Cheese",
+        "description": "Ham, American cheese, mayo, lettuce, tomato, onions.",
+        "price": { "small": 8.50, "large": 11.50 }
+      },
+      {
+        "name": "BLT",
+        "description": "Bacon, lettuce, tomato, mayo.",
+        "price": { "small": 8.50, "large": 11.50 }
+      },
+      {
+        "name": "Buffalo Chicken",
+        "description": "Crispy chicken tenders, medium wing sauce, blue cheese, provolone, lettuce, tomato.",
+        "price": { "small": 8.50, "large": 11.50 }
+      },
+      {
+        "name": "Tuna Salad",
+        "description": "House tuna salad, American cheese, mayo, lettuce, tomato, onions.",
+        "price": { "small": 8.50, "large": 11.50 }
+      }
+    ],
+    "hot": [
+      {
+        "name": "Meatball Parm",
+        "description": "House meatballs, marinara sauce, melted provolone.",
+        "price": { "small": 9.00, "large": 12.00 }
+      },
+      {
+        "name": "Chicken Parm",
+        "description": "Fried chicken cutlet, marinara sauce, melted provolone.",
+        "price": { "small": 9.00, "large": 12.00 }
+      },
+      {
+        "name": "Sausage & Peppers",
+        "description": "Grilled Italian sausage, sautéed green peppers, onions, marinara, provolone.",
+        "price": { "small": 9.00, "large": 12.00 }
+      }
+    ]
+  },
+
+  "fries": {
+    "items": [
+      {
+        "name": "Regular Fries",
+        "price": { "small": 3.50, "large": 4.50 }
+      },
+      {
+        "name": "Curly Fries",
+        "description": "Seasoned curly fries.",
+        "price": { "small": 4.00, "large": 5.00 }
+      },
+      {
+        "name": "Cheese Fries",
+        "description": "Regular fries with cheddar or mozzarella.",
+        "price": { "one_size": 6.50 }
+      },
+      {
+        "name": "Curly Cheese Fries",
+        "description": "Curly fries with cheddar cheese sauce.",
+        "price": { "one_size": 7.00 }
+      },
+      {
+        "name": "Prince's Loaded Fries",
+        "description": "Curly fries, cheddar cheese sauce, crispy bacon, ranch drizzle. The full royal treatment.",
+        "price": { "one_size": 8.99 }
+      }
+    ]
+  },
+
+  "sides": {
+    "items": [
+      {
+        "name": "Prince Knots",
+        "description": "Six house-made garlic knots with marinara dipping sauce. The move for every order.",
+        "price": { "one_size": 5.99 }
+      },
+      {
+        "name": "Mozzarella Sticks",
+        "description": "Six sticks, served with marinara.",
+        "price": { "one_size": 6.99 }
+      },
+      {
+        "name": "Chicken Tenders",
+        "description": "Five crispy tenders. Plain, buffalo, BBQ, or honey mustard.",
+        "price": { "one_size": 7.99 }
+      },
+      {
+        "name": "Wings",
+        "description": "Buffalo wings in mild, hot, BBQ, garlic parm, or honey mustard. Served with blue cheese or ranch.",
+        "price": { "6pc": 8.99, "12pc": 15.99 }
+      },
+      {
+        "name": "Garlic Bread",
+        "price": { "plain": 3.00, "with_cheese": 4.00 }
+      }
+    ]
+  },
+
+  "drinks": {
+    "items": [
+      { "name": "Fountain Drink",  "options": ["Coke","Diet Coke","Sprite","Root Beer","Lemonade","Iced Tea"], "price": 2.50 },
+      { "name": "20oz Bottle",     "options": ["Coke","Diet Coke","Sprite","Water"], "price": 2.75 },
+      { "name": "2-Liter",         "options": ["Coke","Diet Coke","Sprite","Root Beer"], "price": 4.25 },
+      { "name": "Spring Water",    "price": 1.25 }
+    ]
+  },
+
+  "delivery": {
+    "minimum_order": 15.00,
+    "fee": 3.00,
+    "radius_note": "We deliver within Lancaster city and surrounding areas. Call to confirm if you're unsure.",
+    "estimated_time": "45-60 minutes"
+  },
+
+  "pickup": {
+    "estimated_time": "20-25 minutes"
+  }
+}

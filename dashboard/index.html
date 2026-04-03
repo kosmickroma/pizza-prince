@@ -1,0 +1,325 @@
+<!--
+@file index.html
+@description Real-time kitchen monitor dashboard. Connects to the SSE stream
+             and renders incoming orders as ticket cards. 80s arcade aesthetic.
+             
+@requires /orders/stream - SSE endpoint (backend/routes/orders.js)
+@font     Press Start 2P - Google Fonts (loaded via CDN, no install needed)
+
+@usedby server.js - Served as a static file via app.use('/dashboard', express.static(...))
+@openin Browser   - http://localhost:3000/dashboard 
+-->
+
+<!--
+
+This is the kitchen monitor - the screen the pizza shop staff watches.
+Every time an order is confirmed by the AI, a new ticket appears here in real time.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>🍕 Pizza Prince — Kitchen Monitor</title>
+
+    <!--- Load the Press Start 2P font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
+
+    <style>
+        /* --- Reset & Base -------------------------------------------------------*/
+
+        /* box sizing: border-box means padding/border are included in width calculations.
+           without this, adding padding to an element makes it wider than expected. */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0;}
+
+        body {
+            background-color: #0a0a0f; /* dark background for arcade vibe */
+            color: #39ff14;            /* neon green text */
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;             /* small font size for pixelated look */
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* --- Header ----------------------------------------------------------------*/
+
+        header {
+            text-align: center;
+            padding: 20px 0 30px;
+            border-bottom: 2px solid #39ff14;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 20px;
+            color: #ff6b00;               /* Orange - the pizza color */
+            text-shadow: 0 0 20px #ff6b00;  /* Neon glow effect */
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #666;
+            font-size: 8px;
+        }
+
+        /* --- Status Indicator -------------------------------------------------------------*/
+
+        /* Shows wether we're connected to the SSE stream or not. */
+        #status {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 8px;
+        }
+
+        #status.connected { color:#39ff14; }
+        #status.disconnected { color: #ff0040; }
+
+        /* The blinking dot next to the status text */
+        .blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* --- Order Grid -----------------------------------------------------------------------------*/
+
+        #orders {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        /* --- Order Ticket Card ----------------------------------------------------------------------*/
+
+        .ticket {
+            border: 2px solid #39ff14;
+            padding: 16px;
+            background:#0a0a0f;
+            position: relative;
+            line-height: 1.8;
+
+            /* Slide in animation when a new ticket appears */
+            animation: slideIn 0.4s ease-out;
+        }
+
+        /* New tickets flash orange briefly to grab attention */
+        .ticket.new {
+            border-color: #ff6b00;
+            box-shadow: 0 0 20px #ff6b00;
+            animation: slideIn 0.4s ease-out, flashNew 1s ease-out 0.4s forwards;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes flashNew {
+            0% { border-color: #ff6b00; box-shadow: 0 0 20px #ff6b00; }
+            100% { border-color: #39ff14; box-shadow: none; }
+        }
+
+        /* Order ID in the top-right corner of the ticket */
+        .ticket-id {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            color: #ff6b00;
+            font-size: 8px;
+        }
+
+        .ticket-header {
+            color: #fff;
+            font-size: 11px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #333;
+        }
+
+        /* Delivery gets a red badge, pickup gets blue */
+        .order-type {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 7px;
+            margin-left: 8px;
+        }
+        .order-type.delivery { background: #ff0040; color: #fff; }
+        .order-type.pickup   { background: #0050ff; color: #fff; }
+
+        .ticket-section {
+            margin-bottom: 10px;
+        }
+
+        .label {
+            color: #666;
+            font-size: 7px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .ticket-items {
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .ticket-items li {
+            padding: 3px 0;
+            border-bottom: 1px dotted #1a1a2e;
+            font-size: 8px;
+        }
+
+        /* Modifications shown in a muted color */
+        .ticket-items li span {
+            color: #888;
+            font-size: 7px;
+        }
+
+        .ticket-total {
+            color: #ff6b00;
+            font-size: 12px;
+            text-align: right;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #333;
+        }
+
+        .ticket-time {
+            color: #444;
+            font-size: 7px;
+            margin-top: 8px;
+            text-align: right;
+        }
+
+        /* --- Empty State -----------------------------------------------------------------------------*/
+
+        #empty {
+            text-align: center;
+            color: #333;
+            padding: 60px 20px;
+            font-size: 10px;
+            line-height: 3;
+        }
+     </style>
+</head>
+<body>
+
+    <header>
+        <h1>🍕 Pizza Prince</h1>
+        <p>KITCHEN MONITOR - THE KING OF SLICES</p>
+    </header>
+
+    <!-- Connection status - updates when SSE connects/disconnects -->
+     <div id="status" class="disconnected">
+        <span class="blink">●</span> CONNECTING...
+     </div>
+
+     <!-- Orders appear here -->
+      <div id="orders">
+        <div id="empty">
+            NO ORDERS YET<br/>
+            WAITING FOR THE RUSH...
+        </div>
+      </div>
+
+      <script>
+        // --- SSE Connection ---------------------------------------------------------------
+
+        const source = new EventSource('/orders/stream');
+
+        const statusEl = document.getElementById('status');
+        const ordersEl = document.getElementById('orders');
+        const emptyEl = document.getElementById('empty');
+
+        // Fires when the SSE connection is established
+        source.onopen = () => {
+            statusEl.className = 'connected';
+            statusEl.innerHTML = '<span class="blink">●</span> LIVE - WATCHING FOR ORDERS';
+        };
+
+        // Fires if the connection drops (server restart, network issue, etc.)
+        // The browser automatically tries to reconnect we just updated the UI
+        source.onerror = () => {
+            statusEl.className = 'disconnected';
+            statusEl.innerHTML = '<span class="blink">●</span> RECONNECTING...';
+        };
+
+        // Fires every time the server pushes a new order down the stream
+        source.onmessage = (event) => {
+            // event.data is the raw string the server sent - parse it back to an object
+            const order = JSON.parse(event.data);
+
+            // Remove the "no orders yet" message on the first order
+            if (emptyEl) emptyEl.remove();
+
+            // Build and add the ticket card to the page
+            addTicket(order, true);
+        };
+
+        // --- Ticket Builder -----------------------------------------------------------
+
+        // Create a ticket card DOM element and add it to the grid
+        function addTicket(order, isNew = false) {
+            const ticket = document.createElement('div');
+            ticket.className = isNew ? 'ticket new' : 'ticket';
+
+            // Format the timestamp to a readable time like "8:42 PM"
+            const time = new Date(order.timestamp).toLocaleTimeString('en-US', {
+                hour: 'numeric', minute: '2-digit', hour12: true
+            });
+
+            // Build the items list HTML
+            const itemsHtml = (order.items || []).map(item => {
+                const mods = item.modifications?.length
+                    ? `<br/><span>(${item.modifications.join(', ')})</span>`
+                    : '';
+                const size = item.size ? `${item.size} ` : '';
+                const qty = item.quantity && item.quantity > 1 ? `${item.quantity}x ` : '';
+                return `<li>${qty}${item.name}${size}${mods}</li>`;
+            }).join('');
+
+            // Determine delivery vs pickup for the badge
+            const type      = order.customer?.type?.toLowerCase() === 'delivery' ? 'delivery' : 'pickup';
+            const address   = type === 'delivery' && order.customer?.address
+                ? `<div class="label">ADDRESS</div><div>${order.customer.address}</div>`
+                : '';
+
+            // Set the full HTML for the ticket
+            ticket.innerHTML = `
+                <div class="ticket-id">#${order.order_id}</div>
+                <div class="ticket-header">
+                    ${order.customer?.name || 'UNKNOWN CUSTOMER'}
+                    <span class="order-type ${type}">${type.toUpperCase()}</span>
+                </div>
+
+                <div class="ticket-section">
+                    <div class="label">PHONE</div>
+                    <div>${order.customer?.phone || '-'}</div>
+                </div>
+
+                ${address ? `<div class="ticket-section">${address}</div>` : ''}
+
+                <div class="ticket-section">
+                    <div class="label">ORDER</div>
+                    <ul class="ticket-items">${itemsHtml}</ul>
+                </div>
+
+                ${order.special_instructions
+                ? `<div class="ticket-section"><div class="label">INSTRUCTIONS</div><div>${order.special_instructions}</div></div>`
+                : ''}
+
+                <div class="ticket-total">TOTAL: $${Number(order.total_price).toFixed(2)}</div>
+                <div class="ticket-time">${time}</div>
+             `;
+
+             // Add newest orders to the TOP of the grid
+             ordersEl.prepend(ticket);
+        }
+      </script>
+
+</body>
+</html>
+

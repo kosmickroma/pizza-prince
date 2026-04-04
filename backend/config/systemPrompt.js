@@ -7,9 +7,9 @@
  * @requires ../config/menu.json              - The full menu - prices, items, upsell targets
  * 
  * @exports buildSystemPrompt() - Returns the complete system prompt string for Claude
- * @exports TOOLS               - Tool definitions array passed to the Claude API
- * 
- * @usedby routes/llm.js - Called once at startup; prompt passed to Claude every turn
+ * @exports TOOLS               - Tool definitions array passed to the Gemini API
+ *
+ * @usedby routes/llm.js - Called once at startup; prompt passed to Gemini every turn
  */
 
 import { readFileSync } from 'fs';
@@ -25,54 +25,60 @@ const menu     = JSON.parse(readFileSync(menuPath, 'utf8'));
 
 // --- Tool Definition ---------------------------------------------------------
 
-// This tells Claude what tool it has available and when to use it.
-// When Claude decides to call this tool, it returns structured JSON with order details
+// This tells Gemini what tool it has available and when to use it.
+// Gemini's format wraps everything in { functionDeclarations: [...] }
+// and uses 'parametersJsonSchema' instead of Anthropic's 'input_schema'.
+// The schema structure inside is the same JSON Schema format otherwise.
 
 export const TOOLS = [
     {
-        name: 'submit_order',
-        description: [
-            'Submit a completed order to the kitchen. Call this ONLY when you have:',
-            '1. The customer\'s full name and phone number',
-            '2. Delivery or pickup confirmed (and address if delivery)',
-            '3. At least one item with size confirmed',
-            '4. Repeated the order back and the customer confirmed it',
-            'Do NOT call this until the customer has verbally confirmed the order.'
-        ].join(' '),
-        input_schema: {
-            type: 'object',
-            properties: {
-                customer: {
+        functionDeclarations: [
+            {
+                name: 'submit_order',
+                description: [
+                    'Submit a completed order to the kitchen. Call this ONLY when you have:',
+                    '1. The customer\'s full name and phone number',
+                    '2. Delivery or pickup confirmed (and address if delivery)',
+                    '3. At least one item with size confirmed',
+                    '4. Repeated the order back and the customer confirmed it',
+                    'Do NOT call this until the customer has verbally confirmed the order.'
+                ].join(' '),
+                parametersJsonSchema: {
                     type: 'object',
                     properties: {
-                        name:   { type: 'string', description: 'Customer full name' },
-                        phone:  { type: 'string', description: 'Customer phone number' },
-                        type:   { type: 'string', enum: ['Delivery', 'Pickup'] },
-                        address:{ type: 'string', description: 'Delivery address (if delivery)' },      
-                    },
-                    required: ['name', 'phone', 'type'],
-                },
-                items: {
-                    type: 'array',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            name:              { type: 'string' },
-                            size:              { type: 'string' },
-                            quantity:          { type: 'number' },
-                            modifications:     { type: 'array', items: { type: 'string' } },
-                            price:             { type: 'number' },
+                        customer: {
+                            type: 'object',
+                            properties: {
+                                name:    { type: 'string', description: 'Customer full name' },
+                                phone:   { type: 'string', description: 'Customer phone number' },
+                                type:    { type: 'string', enum: ['Delivery', 'Pickup'] },
+                                address: { type: 'string', description: 'Delivery address (if delivery)' },
+                            },
+                            required: ['name', 'phone', 'type'],
                         },
-                        required: ['name', 'price'],
+                        items: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    name:          { type: 'string' },
+                                    size:          { type: 'string' },
+                                    quantity:      { type: 'number' },
+                                    modifications: { type: 'array', items: { type: 'string' } },
+                                    price:         { type: 'number' },
+                                },
+                                required: ['name', 'price'],
+                            },
+                        },
+                        total_price:          { type: 'number' },
+                        upsell_successful:    { type: 'boolean' },
+                        special_instructions: { type: 'string' },
                     },
+                    required: ['customer', 'items', 'total_price'],
                 },
-                total_price:                 { type: 'number' },
-                upsell_successful:           { type: 'boolean' },
-                special_instructions:        { type: 'string' },
             },
-            required: ['customer', 'items', 'total_price'],
-        },
-    }
+        ],
+    },
 ];
 
 // --- Build System Prompt ---------------------------------------------------------

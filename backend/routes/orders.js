@@ -30,7 +30,7 @@ function broadcast(order) {
         client.write(message);
     }
     
-    console.log(`📣 Broadcasted order ${order.order_id} to ${clients.size} dashboards(s)`);
+    console.log(`📣 Broadcasted order ${order.order_id} to ${clients.size} dashboard(s)`);
 }
 
 // --- SSE Stream Endpoint -----------------------------------------------------

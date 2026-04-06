@@ -41,7 +41,7 @@ const sessions = new Map();
 
 // --- Setup Function ---------------------------------------------------------
 
-// Attatch the WebSocket server to our Express HTTP server. Called once from server.js after the HTTP is created.
+// Attach the WebSocket server to our Express HTTP server. Called once from server.js after the HTTP is created.
 export function setupLLMWebSocket(httpServer) {
 
     const wss = new WebSocketServer({ server: httpServer, path: '/llm-websocket' });
@@ -130,7 +130,7 @@ function syncHistory(history, transcript) {
 
 // --- Gemini Response ----------------------------------------------
 
-// Send the convorsation history to Gemini and get a response.
+// Send the conversation history to Gemini and get a response.
 
 async function getGeminiResponse(callId, history) {
 
@@ -181,7 +181,7 @@ async function getGeminiResponse(callId, history) {
                 functionResponse: {
                     name,
                     id,
-                    response: { name, content: result },
+                    response: { result },
                 },
             }],
         });

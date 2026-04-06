@@ -4,7 +4,6 @@
  *              pipeline (save -> SSE broadcast -> Telegram) without a real phone call.
  * 
  * @requires express                     - Router
- * @requires ../services/orderStore.js   - saveOrder()
  * @requires ../services/telegram.js     - sendOrderNotification()
  * 
  * @route GET /demo/order                - Fires a random test order
@@ -18,7 +17,6 @@
 
 // This route lets you trigger a fake order from a browser without making an actual phone call.
 import express from 'express';
-import { saveOrder } from '../services/orderStore.js';
 import { sendOrderNotification } from '../services/telegram.js';
 
 const router = express.Router();
@@ -128,22 +126,19 @@ router.get('/order', async (req, res) => {
         orderData = TEST_ORDERS[randomKey];
     }
 
-    // Save it and broadcast to the dashboard
-    // This goes through the EXACT same path as a real order - no shortcuts
-    const order = saveOrder(orderData);
-    
-    // POST it to our own /orders endpoint so it broadcasts via SSE
-    // We call our own API internally to keep the logic in one place
+    // POST to our own /orders endpoint — it saves the order AND broadcasts via SSE.
+    // We get the saved order (with its ID) back from the response.
+    let order;
     try {
-        await fetch(`http://localhost:${process.env.PORT || 3000}/orders`, {
+        const response = await fetch(`http://localhost:${process.env.PORT || 3000}/orders`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify(orderData),
         });
+        order = await response.json();
     } catch (err) {
-        // Non-fatal - the order was already saved above
         console.warn('Demo broadcast warning:', err.message);
-
+        return res.status(500).json({ error: 'Demo order failed — is the server running?' });
     }
 
     // Also fire the Telegram notification so the full demo works end-to-end

@@ -19,7 +19,7 @@ import path from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load the menu once at startup. readFileSynce reads it synchronously
+// Load the menu once at startup. readFileSync reads it synchronously
 const menuPath = path.join(__dirname, 'menu.json');
 const menu     = JSON.parse(readFileSync(menuPath, 'utf8'));
 

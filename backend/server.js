@@ -1,7 +1,7 @@
 /**
  * @file server.js
  * @description Express HTTP server entry point. Mounts all routes and 
- *              attatches the WebSocket server for Retell LLM integration.
+ *              attaches the WebSocket server for Retell LLM integration.
  * 
  * @requires dotenv             - Loads environment variables from .env
  * @requires express            - HTTP framework
@@ -13,47 +13,85 @@
  */
 
 import 'dotenv/config';
-import express from 'express'; //Express is the web framework.
+import express    from 'express';
+import { createServer } from 'http';        // Node built-in — creates the HTTP server
 import { fileURLToPath } from 'url';
 import path from 'path';
 
-// --- Path Setup --------------------------------------------
+// Import the routes we built (each handles a different section of the API)
+import ordersRouter from './routes/orders.js';  // Template 03
+import demoRouter   from './routes/demo.js';    // Template 08
 
-// In ES Modules (this project uses "type": "module" in package.json)
+// Import the WebSocket setup function (Template 07)
+// This is a function, not a router — it attaches to the HTTP server directly
+import { setupLLMWebSocket } from './routes/llm.js';
+
+// --- Path Setup ----------------------------------------------------------------
+
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname  = path.dirname(__filename);
 
-// --- App Setup ---------------------------------------------
+// --- Express App ---------------------------------------------------------------
 
-// Create the Express application. 'app' is what we attatch everything to.
 const app = express();
 
-// Middleware: parse incoming JSON request bodies automatically.
 app.use(express.json());
 
-// Middleware: serve everything in the 'dashboard/' folder as static files.
+// Serve the dashboard HTML from the dashboard/ folder
+// Visiting http://localhost:3000/dashboard serves dashboard/index.html
 app.use('/dashboard', express.static(path.join(__dirname, '..', 'dashboard')));
 
-// --- Routes ---------------------------------------------
+// --- Routes --------------------------------------------------------------------
 
-// Health check endpoint. Retell and other services ping this to make sure
-// the server is alive. Returns a simple JSON response with status "ok".
+// Health check — stays simple
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', service: 'pizza-prince' });
+  res.json({ status: 'ok', service: 'pizza-prince' });
 });
 
-// TODO: We'll plug in more routes here as we build them.
+// Mount the orders router at /orders
+// This means:
+//   GET  /orders/stream → handled by ordersRouter (SSE stream)
+//   POST /orders        → handled by ordersRouter (new order)
+app.use('/orders', ordersRouter);
 
-// --- Start the Server -------------------------------------
+// Mount the demo router at /demo
+// This means:
+//   GET /demo/order → fires a fake order through the full pipeline
+//   GET /demo/clear → (coming soon) clears the dashboard
+app.use('/demo', demoRouter);
 
-// Read the PORT from our .env file. If it's not set, default to 3000.
+// --- HTTP Server ----------------------------------------------------------------
+
+// Create the HTTP server manually so we can share it with WebSockets.
+// The Express `app` becomes the request handler for all HTTP traffic.
+const server = createServer(app);
+
+// Attach the Retell LLM WebSocket server to the SAME HTTP server.
+// After this call, ws:// connections to /llm-websocket are handled by
+// the WebSocket server, and http:// connections are handled by Express.
+// They share port 3000 — Node figures out which is which from the protocol.
+setupLLMWebSocket(server);
+
+// --- Start Listening ------------------------------------------------------------
+
 const PORT = parseInt(process.env.PORT) || 3000;
 
-// app.listen() starts the server and tells it to watch for incoming connections.
-app.listen(PORT, () => {
-    console.log(`🍕 Pizza Prince server running on port ${PORT}`);
-    console.log(`   Health check: http://localhost:${PORT}/health`);
-    console.log(`   Dashboard:    http://localhost:${PORT}/dashboard`);
-    console.log(`   Press Ctrl+C to stop`); 
+// Note: server.listen() instead of app.listen()
+// Because we want the HTTP server (with WebSockets attached) to listen,
+// not just the Express app on its own.
+server.listen(PORT, () => {
+  console.log('');
+  console.log('🍕 ================================ 🍕');
+  console.log(`   PIZZA PRINCE SERVER IS LIVE`);
+  console.log('🍕 ================================ 🍕');
+  console.log('');
+  console.log(`   Health:    http://localhost:${PORT}/health`);
+  console.log(`   Dashboard: http://localhost:${PORT}/dashboard`);
+  console.log(`   Demo:      http://localhost:${PORT}/demo/order`);
+  console.log(`   WS:        ws://localhost:${PORT}/llm-websocket`);
+  console.log('');
+  console.log('   Run: ngrok http 3000');
+  console.log('   Then paste the ngrok URL into your Retell agent config.');
+  console.log('');
 });
 

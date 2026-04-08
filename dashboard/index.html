@@ -33,37 +33,61 @@
 
         /* ── Header ── */
         header {
-            text-align: center;
-            padding: 20px 0 30px;
+            padding: 16px 20px;
             border-bottom: 2px solid #39ff14;
             margin-bottom: 30px;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
         }
+
+        /* Brand — logo + text side by side, centered */
+        #header-brand {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-logo {
+            height: 180px;
+            width: 180px;
+            flex-shrink: 0;
+        }
+
+        #header-titles { text-align: center; }
 
         header h1 {
-            font-size: 20px;
+            font-size: 52px;
             color: #ff6b00;
-            text-shadow: 0 0 20px #ff6b00;
+            text-shadow: 0 0 30px #ff6b00, 0 0 60px rgba(255,107,0,0.4);
             margin-bottom: 10px;
+            line-height: 1.1;
         }
 
-        header p { color: #666; font-size: 8px; }
+        header p { color: #666; font-size: 13px; letter-spacing: 4px; margin-top: 30px; }
 
-        /* Dev clear-all — invisible until hover, bottom-left */
-        #dev-clear {
+        /* Dev buttons — far left, no text, tiny colored squares */
+        #dev-buttons {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 6px;
-            color: #1a1a1a;
-            background: transparent;
-            border: 1px solid #1a1a1a;
-            padding: 4px 6px;
-            cursor: pointer;
-            transition: color 0.2s, border-color 0.2s;
+            left: 16px;
+            bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
-        #dev-clear:hover { color: #ff0040; border-color: #ff0040; }
+        #dev-clear, #dev-seed {
+            width: 12px;
+            height: 12px;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+        #dev-clear { background: #ff0040; }
+        #dev-clear:hover { background: #ff4466; }
+        #dev-seed  { background: #39ff14; }
+        #dev-seed:hover  { background: #66ff44; }
 
         /* ── Prince widget — always in header top right ── */
         #prince-widget {
@@ -405,8 +429,22 @@
 <body>
 
     <header>
-        <h1>🍕 Pizza Prince</h1>
-        <p>KITCHEN MONITOR - THE KING OF SLICES</p>
+
+        <!-- Dev buttons — far left, no text, just tiny colored squares -->
+        <div id="dev-buttons">
+            <button id="dev-clear" title="Clear all orders"></button>
+            <button id="dev-seed"  title="Seed demo orders"></button>
+        </div>
+
+        <!-- Brand center — logo | title | logo -->
+        <div id="header-brand">
+            <img class="header-logo" src="/assets/ppicon_trans.png" alt="" />
+            <div id="header-titles">
+                <h1>Pizza Prince</h1>
+                <p>KITCHEN MONITOR</p>
+            </div>
+            <img class="header-logo" src="/assets/ppicon_trans.png" alt="" />
+        </div>
 
         <!-- Prince widget — always visible top right -->
         <div id="prince-widget">
@@ -425,7 +463,6 @@
             <button id="listen-btn">🎧 LISTEN IN</button>
         </div>
 
-        <button id="dev-clear" title="dev">✕ CLEAR ALL</button>
     </header>
 
     <div id="status" class="disconnected">
@@ -536,9 +573,10 @@
         source.onmessage = (event) => {
             const data = JSON.parse(event.data);
 
-            // Call state events
-            if (data.type === 'call_started') { startCallOverlay(); return; }
-            if (data.type === 'call_ended')   { endCallOverlay();   return; }
+            // System events
+            if (data.type === 'call_started')   { startCallOverlay(); return; }
+            if (data.type === 'call_ended')     { endCallOverlay();   return; }
+            if (data.type === 'orders_cleared') { clearDashboard();   return; }
 
             // Orders from history (before historyLoaded) come in as done — no stale timers
             const isNew = historyLoaded;
@@ -548,10 +586,17 @@
         };
 
         // ── Ticket builder ────────────────────────────────────────────────────────
+        const renderedOrders = new Set();
+
         function addTicket(order, isNew = false) {
+            // Skip if this order is already on screen (SSE reconnect replays history)
+            if (renderedOrders.has(order.order_id)) return;
+            renderedOrders.add(order.order_id);
+
             const ticket = document.createElement('div');
             ticket.className = 'ticket';
-            ticket.dataset.state = isNew ? 'new' : 'done';
+            // demo_state overrides the default — lets seed orders load in the right color
+            ticket.dataset.state = order.demo_state || (isNew ? 'new' : 'done');
             ticket.dataset.orderId = order.order_id;
 
             const arrived = order.timestamp ? new Date(order.timestamp).getTime() : Date.now();
@@ -645,11 +690,25 @@
             }
         });
 
-        // ── Dev: clear all ────────────────────────────────────────────────────────
-        document.getElementById('dev-clear').addEventListener('click', () => {
+        // ── Clear dashboard DOM ───────────────────────────────────────────────────
+        function clearDashboard() {
             document.querySelectorAll('.ticket').forEach(t => t.remove());
+            renderedOrders.clear();
             clearBar.className = '';
-            ordersEl.innerHTML = '<div id="empty">NO ORDERS YET<br/>WAITING FOR THE RUSH...</div>';
+            if (!document.querySelector('.ticket')) {
+                ordersEl.innerHTML = '<div id="empty">NO ORDERS YET<br/>WAITING FOR THE RUSH...</div>';
+            }
+        }
+
+        // ── Dev: clear all (wipes server data too) ────────────────────────────────
+        document.getElementById('dev-clear').addEventListener('click', async () => {
+            await fetch('/demo/clear');
+            clearDashboard();
+        });
+
+        // ── Dev: seed demo orders ─────────────────────────────────────────────────
+        document.getElementById('dev-seed').addEventListener('click', async () => {
+            await fetch('/demo/seed');
         });
 
     </script>

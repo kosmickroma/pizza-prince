@@ -76,10 +76,11 @@ function saveOrdersToDisk() {
 
 // Save a new order. Called by the AI tool handler when an order is submitted.
 export function saveOrder(orderData){
+    const { _seed_timestamp, ...rest } = orderData;
     const order = {
-        order_id: generateOrderId(),
-        timestamp: new Date().toISOString(),
-        ...orderData,
+        order_id:  generateOrderId(),
+        timestamp: _seed_timestamp || new Date().toISOString(),
+        ...rest,
     };
 
     // Add to in-memory array
@@ -102,4 +103,16 @@ export function getOrders() {
 // Get just the most recent N orders.
 export function getRecentOrders(limit = 10) {
     return orders.slice(-limit).reverse();
+}
+
+// Wipe all orders from memory and disk. Used by the demo clear endpoint.
+export function clearOrders() {
+    orders = [];
+    orderCounter = 1;
+    try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2));
+    } catch (err) {
+        console.warn('⚠️  Could not clear orders file:', err.message);
+    }
+    console.log('🗑️  All orders cleared');
 }

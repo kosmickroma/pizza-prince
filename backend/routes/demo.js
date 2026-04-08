@@ -18,6 +18,8 @@
 // This route lets you trigger a fake order from a browser without making an actual phone call.
 import express from 'express';
 import { sendOrderNotification } from '../services/telegram.js';
+import { clearOrders } from '../services/orderStore.js';
+import { broadcastEvent } from '../routes/orders.js';
 
 const router = express.Router();
 
@@ -155,10 +157,76 @@ router.get('/order', async (req, res) => {
 });
 
 // GET /demo/clear
-// Clears all demo orders from the dashboard
+// Wipes all orders from memory + disk, tells every connected dashboard to clear itself
 router.get('/clear', (req, res) => {
-    // We'll implement this if needed
-    res.json({ message: 'Clear endpoint coming soon. For now: restart the server.'});
+    clearOrders();
+    broadcastEvent({ type: 'orders_cleared' });
+    res.json({ message: 'All orders cleared. Dashboard reset.' });
+});
+
+// GET /demo/seed
+// Loads two pre-built orders for the demo — one done, one in-progress
+// Hit this once after /demo/clear before you start filming
+router.get('/seed', async (req, res) => {
+    const now = Date.now();
+
+    const seedOrders = [
+        {
+            // John — Delivery — DONE (came in 34 minutes ago)
+            customer: {
+                name:    'John',
+                phone:   '717-291-4883',
+                type:    'Delivery',
+                address: '412 E Chestnut St, Lancaster, PA 17602',
+            },
+            items: [
+                { name: 'Cheese Pizza',    size: 'Large',  quantity: 1, modifications: [],            price: 16.00 },
+                { name: 'Italian Sub',     size: 'Large',  quantity: 1, modifications: [],            price: 11.50 },
+                { name: 'Meatball Parm',   size: 'Small',  quantity: 1, modifications: [],            price:  9.00 },
+                { name: 'Curly Fries',     size: 'Large',  quantity: 1, modifications: [],            price:  5.00 },
+            ],
+            total_price:       41.50,
+            upsell_successful: false,
+            special_instructions: null,
+            _seed_timestamp:   new Date(now - 34 * 60 * 1000).toISOString(),
+            demo_state:        'done',
+        },
+        {
+            // Marcus — Pickup — IN PROGRESS (came in 11 minutes ago)
+            customer: {
+                name:    'Marcus',
+                phone:   '717-390-7741',
+                type:    'Pickup',
+            },
+            items: [
+                { name: 'The Turtle Tracks', size: 'Large',  quantity: 1, modifications: [],                        price: 22.00 },
+                { name: 'Wings',             size: null,     quantity: 1, modifications: ['12pc', 'BBQ'],            price: 15.99 },
+                { name: 'Prince Knots',      size: null,     quantity: 1, modifications: [],                        price:  5.99 },
+                { name: 'Curly Cheese Fries',size: null,     quantity: 1, modifications: [],                        price:  7.00 },
+            ],
+            total_price:       50.98,
+            upsell_successful: true,
+            special_instructions: null,
+            _seed_timestamp:   new Date(now - 11 * 60 * 1000).toISOString(),
+            demo_state:        'in-progress',
+        },
+    ];
+
+    const saved = [];
+    for (const orderData of seedOrders) {
+        try {
+            const response = await fetch(`http://localhost:${process.env.PORT || 3000}/orders`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(orderData),
+            });
+            saved.push(await response.json());
+        } catch (err) {
+            return res.status(500).json({ error: 'Seed failed: ' + err.message });
+        }
+    }
+
+    res.json({ message: 'Demo seeded — 2 orders loaded.', orders: saved.map(o => o.order_id) });
 });
 
 export default router;

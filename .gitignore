@@ -21,3 +21,10 @@ kktodo/
 # Editor
 .vscode/
 .idea/
+
+# ngrok config if it ever ends up here
+.ngrok*
+ngrok.yml
+
+# Printable menu has real phone number — hand to clients directly, never commit
+dashboard/menu_print.html

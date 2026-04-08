@@ -7,7 +7,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Node.js-20+-green?style=flat-square"/>
-  <img src="https://img.shields.io/badge/Claude-Haiku-orange?style=flat-square"/>
+  <img src="https://img.shields.io/badge/Gemini-Flash_2.5-orange?style=flat-square"/>
   <img src="https://img.shields.io/badge/Retell_AI-Voice-blue?style=flat-square"/>
   <img src="https://img.shields.io/badge/Status-In_Progress-yellow?style=flat-square"/>
 </p>
@@ -38,7 +38,7 @@ Retell AI — handles voice (speech-to-text + text-to-speech)
 Express Server /llm-websocket
     │
     ▼
-Claude Haiku — reads the menu, runs the conversation, calls tools
+Gemini Flash 2.5 — reads the menu, runs the conversation, calls tools
     │
     ├──▶  submit_order tool
     │         ├──▶ Logs order to data/orders.json
@@ -57,7 +57,7 @@ Retell AI speaks the response back to the caller
 |---|---|
 | Voice (STT/TTS) | [Retell AI](https://retellai.com) |
 | Telephony | [Twilio](https://twilio.com) |
-| AI Brain | Claude Haiku (fast + cheap for real-time voice) |
+| AI Brain | Gemini Flash 2.5 (fast + cheap for real-time voice) |
 | Backend | Node.js / Express |
 | Kitchen Display | Custom HTML/CSS + Server-Sent Events |
 | Owner Alerts | Telegram Bot API |
@@ -109,7 +109,6 @@ pizza-prince/
 │   │   ├── orders.js # Order logging + SSE stream
 │   │   └── demo.js   # Trigger fake orders for demos
 │   └── services/
-│       ├── claude.js      # Claude Haiku client
 │       ├── telegram.js    # Owner notification
 │       └── orderStore.js  # Order persistence
 ├── dashboard/

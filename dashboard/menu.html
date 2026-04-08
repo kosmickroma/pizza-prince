@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Pizza Prince — Menu</title>
+  <link rel="icon" href="/assets/logo_icon.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Oswald:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Root ── */
+    :root {
+      --black:      #0a0a0f;
+      --dark:       #0f0f1a;
+      --card:       #14141f;
+      --border:     #1e1e32;
+      --green:      #39ff14;
+      --orange:     #ff6b00;
+      --yellow:     #ffd700;
+      --white:      #f0f0f0;
+      --muted:      #888;
+      --pixel:      'Press Start 2P', monospace;
+      --heading:    'Oswald', sans-serif;
+      --body:       'Roboto', sans-serif;
+    }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--body);
+      line-height: 1.6;
+    }
+
+    /* ── Page wrapper ── */
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      padding: 40px 0 30px;
+      border-bottom: 3px solid var(--orange);
+      margin-bottom: 40px;
+    }
+
+    .header img.logo {
+      width: 500px;
+      max-width: 100%;
+      filter: drop-shadow(0 0 20px rgba(255, 107, 0, 0.6));
+      margin-bottom: 16px;
+    }
+
+    .header .tagline {
+      font-family: var(--pixel);
+      font-size: 9px;
+      color: var(--orange);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .header .call-box {
+      display: inline-block;
+      border: 2px solid var(--green);
+      padding: 12px 32px;
+      border-radius: 4px;
+      box-shadow: 0 0 16px rgba(57, 255, 20, 0.3);
+    }
+
+    .header .call-label {
+      font-family: var(--pixel);
+      font-size: 7px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+
+    .header .call-number {
+      font-family: var(--heading);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 3px;
+    }
+
+    .header .call-sub {
+      font-family: var(--pixel);
+      font-size: 7px;
+      color: var(--green);
+      margin-top: 4px;
+      opacity: 0.7;
+    }
+
+    /* ── Weekly Special Banner ── */
+    .weekly-special {
+      background: linear-gradient(135deg, #1a0a00, #2a1000);
+      border: 2px solid var(--orange);
+      border-radius: 6px;
+      padding: 20px 28px;
+      margin-bottom: 40px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(255, 107, 0, 0.2);
+    }
+
+    .weekly-special .label {
+      font-family: var(--pixel);
+      font-size: 8px;
+      color: var(--orange);
+      letter-spacing: 3px;
+      margin-bottom: 8px;
+    }
+
+    .weekly-special .special-name {
+      font-family: var(--heading);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--yellow);
+      margin-bottom: 6px;
+    }
+
+    .weekly-special .special-desc {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* ── Section ── */
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .section-title {
+      font-family: var(--heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--orange);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .section-note {
+      font-family: var(--body);
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── Item Grid ── */
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .items-grid.full-width {
+      grid-template-columns: 1fr;
+    }
+
+    /* ── Menu Item Card ── */
+    .item-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color 0.2s;
+    }
+
+    .item-card:hover {
+      border-color: var(--orange);
+    }
+
+    .item-card.specialty {
+      border-left: 3px solid var(--orange);
+    }
+
+    .item-card.featured {
+      border-left: 3px solid var(--green);
+    }
+
+    .item-name {
+      font-family: var(--heading);
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: 0.5px;
+    }
+
+    .item-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .item-price {
+      font-family: var(--heading);
+      font-size: 15px;
+      color: var(--green);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .item-price span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    /* ── Toppings ── */
+    .toppings-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .topping-chip {
+      background: var(--dark);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── Sub sections (Cold / Hot) ── */
+    .sub-section-label {
+      font-family: var(--pixel);
+      font-size: 8px;
+      color: var(--orange);
+      letter-spacing: 2px;
+      margin: 24px 0 12px;
+    }
+
+    /* ── Info Bar ── */
+    .info-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 24px;
+      margin-top: 40px;
+    }
+
+    .info-item {
+      text-align: center;
+    }
+
+    .info-label {
+      font-family: var(--pixel);
+      font-size: 7px;
+      color: var(--orange);
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+
+    .info-value {
+      font-family: var(--heading);
+      font-size: 16px;
+      color: var(--white);
+      font-weight: 600;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      margin-top: 60px;
+      padding-top: 30px;
+      border-top: 2px solid var(--border);
+    }
+
+    .footer img {
+      width: 60px;
+      opacity: 0.6;
+      margin-bottom: 12px;
+    }
+
+    .footer p {
+      font-family: var(--pixel);
+      font-size: 7px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      line-height: 2.2;
+    }
+
+    /* ── Print Styles ── */
+    @media print {
+      body { background: #0a0a0f; color: #f0f0f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .page { padding: 20px; }
+      .header { padding: 20px 0 20px; }
+      .header img.logo { width: 380px; }
+      .item-card:hover { border-color: var(--border); }
+      .no-print { display: none; }
+    }
+
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Header ── -->
+  <header class="header">
+    <img class="logo" src="/assets/logo.png" alt="The Pizza Prince"/>
+    <p class="tagline">The King of Slices — Lancaster, PA</p>
+    <div class="call-box">
+      <div class="call-label">Order by Phone — AI answers every call</div>
+      <div class="call-number">(717) 555-0190</div>
+      <div class="call-sub">Pickup · Delivery · We Never Miss a Call</div>
+    </div>
+  </header>
+
+  <!-- ── Weekly Special ── -->
+  <div class="weekly-special">
+    <div class="label">★ This Week's Royal Decree ★</div>
+    <div class="special-name">The Weekly Decree</div>
+    <div class="special-desc">Large Shredder + Prince Knots + Large Fries — <strong style="color:#ffd700">$26.99</strong></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- SPECIALTY PIZZAS -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title">🍕 Specialty Pizzas</div>
+        <div class="section-note">Medium 12" · Large 16" · Extra toppings: Med +$1.75 · Lg +$2.00</div>
+      </div>
+    </div>
+    <div class="items-grid">
+
+      <div class="item-card specialty">
+        <div class="item-name">The Shredder</div>
+        <div class="item-desc">Our hottest pizza. Pepperoni, Italian sausage, jalapeños, banana peppers, hot sauce drizzle, and extra cheese. Not for the weak.</div>
+        <div class="item-price">Med $18 <span>/</span> Lg $23</div>
+      </div>
+
+      <div class="item-card specialty">
+        <div class="item-name">The Foot Clan</div>
+        <div class="item-desc">The everything pizza. Pepperoni, sausage, ham, ground beef, bacon, mushrooms, green peppers, onions, extra cheese. An army of toppings.</div>
+        <div class="item-price">Med $19 <span>/</span> Lg $24</div>
+      </div>
+
+      <div class="item-card specialty">
+        <div class="item-name">The Splinter</div>
+        <div class="item-desc">Old school and wise. Thinly sliced cheesesteak, grilled onions, and provolone on a white garlic base. A Lancaster classic.</div>
+        <div class="item-price">Med $18 <span>/</span> Lg $23</div>
+      </div>
+
+      <div class="item-card specialty">
+        <div class="item-name">The Leo</div>
+        <div class="item-desc">Disciplined and clean. Ricotta, fresh mozzarella, roasted garlic, olive oil, oregano, and Parmesan. White pizza done right.</div>
+        <div class="item-price">Med $15 <span>/</span> Lg $20</div>
+      </div>
+
+      <div class="item-card specialty">
+        <div class="item-name">The Mikey</div>
+        <div class="item-desc">The fun one. Ham, pineapple, extra mozzarella, and a drizzle of honey. Don't @ us — it's delicious.</div>
+        <div class="item-price">Med $15 <span>/</span> Lg $20</div>
+      </div>
+
+      <div class="item-card specialty">
+        <div class="item-name">The Raph</div>
+        <div class="item-desc">Hot-headed and bold. Grilled chicken tossed in buffalo sauce, ranch drizzle, red onions, and mozzarella.</div>
+        <div class="item-price">Med $17 <span>/</span> Lg $22</div>
+      </div>
+
+      <div class="item-card specialty">
+        <div class="item-name">The Donatello</div>
+        <div class="item-desc">The smart choice. Mushrooms, spinach, broccoli, roasted red peppers, black olives, fresh tomatoes, and fresh mozzarella. Full veggie.</div>
+        <div class="item-price">Med $16 <span>/</span> Lg $21</div>
+      </div>
+
+      <div class="item-card specialty">
+        <div class="item-name">The Casey Jones</div>
+        <div class="item-desc">A wild card. Seasoned taco beef, sour cream base, cheddar, jalapeños, diced tomatoes, and crushed tortilla chips. Yes, really.</div>
+        <div class="item-price">Med $17 <span>/</span> Lg $22</div>
+      </div>
+
+      <div class="item-card specialty">
+        <div class="item-name">The April O'Neil</div>
+        <div class="item-desc">S1E1 canon. Banana slices, Italian sausage, mozzarella, and a honey drizzle. She tried it in Turtle Tracks — the very first episode.</div>
+        <div class="item-price">Med $15 <span>/</span> Lg $20</div>
+      </div>
+
+      <div class="item-card specialty featured">
+        <div class="item-name">The Turtle Tracks</div>
+        <div class="item-desc">Named after the episode that started it all. Grilled chicken, smoky BBQ sauce, red onions, cheddar and mozzarella blend. Our crowd-pleaser.</div>
+        <div class="item-price">Med $17 <span>/</span> Lg $22</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- BUILD YOUR OWN -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title">🛠 Build Your Own Pizza</div>
+        <div class="section-note">Medium 12" $12 base · Large 16" $16 base · Extra toppings: Med +$1.75 · Lg +$2.00</div>
+      </div>
+    </div>
+    <div class="toppings-grid">
+      <div class="topping-chip">Extra Cheese</div>
+      <div class="topping-chip">Pepperoni</div>
+      <div class="topping-chip">Mushrooms</div>
+      <div class="topping-chip">Ground Beef</div>
+      <div class="topping-chip">Green Peppers</div>
+      <div class="topping-chip">Onions</div>
+      <div class="topping-chip">Italian Sausage</div>
+      <div class="topping-chip">Ham</div>
+      <div class="topping-chip">Bacon</div>
+      <div class="topping-chip">Fresh Tomatoes</div>
+      <div class="topping-chip">Black Olives</div>
+      <div class="topping-chip">Jalapeños</div>
+      <div class="topping-chip">Pineapple</div>
+      <div class="topping-chip">Broccoli</div>
+      <div class="topping-chip">Spinach</div>
+      <div class="topping-chip">Anchovies</div>
+      <div class="topping-chip">Banana Peppers</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- CHEESESTEAKS -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title">🥩 Cheesesteaks</div>
+        <div class="section-note">All steaks on fresh-baked rolls · Sm 8" · Lg 12"</div>
+      </div>
+    </div>
+    <div class="items-grid">
+
+      <div class="item-card">
+        <div class="item-name">Classic Cheesesteak</div>
+        <div class="item-desc">Chipped steak, grilled onions, American cheese, and marinara sauce.</div>
+        <div class="item-price">Sm $9.50 <span>/</span> Lg $12.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Cheesesteak Hoagie</div>
+        <div class="item-desc">Chipped steak, grilled onions, provolone, lettuce, tomato, and mayo. Cold side, hot steak.</div>
+        <div class="item-price">Sm $9.50 <span>/</span> Lg $12.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Chicken Cheesesteak</div>
+        <div class="item-desc">Grilled chicken, grilled onions, American cheese, and marinara sauce.</div>
+        <div class="item-price">Sm $9.50 <span>/</span> Lg $12.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Buff Chicken Steak</div>
+        <div class="item-desc">Grilled chicken, grilled onions, American cheese, blue cheese drizzle, and medium wing sauce.</div>
+        <div class="item-price">Sm $9.50 <span>/</span> Lg $12.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Whiz Steak</div>
+        <div class="item-desc">Chipped steak, grilled onions, and Cheez Whiz. The Philly purist's order.</div>
+        <div class="item-price">Sm $9.50 <span>/</span> Lg $12.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Pizza Steak</div>
+        <div class="item-desc">Chipped steak, pizza sauce, grilled onions, and melted mozzarella.</div>
+        <div class="item-price">Sm $9.50 <span>/</span> Lg $12.50</div>
+      </div>
+
+      <div class="item-card featured">
+        <div class="item-name">The Royal Steak ★</div>
+        <div class="item-desc">Our signature. Chipped steak, grilled onions, mushrooms, green peppers, provolone, and our house garlic aioli. The Prince's best.</div>
+        <div class="item-price">Sm $11.00 <span>/</span> Lg $14.00</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- SUBS -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title">🥖 Subs</div>
+        <div class="section-note">All subs on fresh-baked rolls, oven toasted · Sm 8" · Lg 12"</div>
+      </div>
+    </div>
+
+    <div class="sub-section-label">— Cold Subs —</div>
+    <div class="items-grid">
+
+      <div class="item-card">
+        <div class="item-name">Italian</div>
+        <div class="item-desc">Genoa salami, capicola ham, provolone, oil and vinegar, lettuce, tomato, onions.</div>
+        <div class="item-price">Sm $8.50 <span>/</span> Lg $11.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">American</div>
+        <div class="item-desc">Cooked ham, cooked salami, American cheese, oil, lettuce, tomato, onions.</div>
+        <div class="item-price">Sm $8.50 <span>/</span> Lg $11.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Turkey</div>
+        <div class="item-desc">Sliced turkey breast, American cheese, mayo, lettuce, tomato, onions.</div>
+        <div class="item-price">Sm $8.50 <span>/</span> Lg $11.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Ham & Cheese</div>
+        <div class="item-desc">Ham, American cheese, mayo, lettuce, tomato, onions.</div>
+        <div class="item-price">Sm $8.50 <span>/</span> Lg $11.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">BLT</div>
+        <div class="item-desc">Bacon, lettuce, tomato, mayo.</div>
+        <div class="item-price">Sm $8.50 <span>/</span> Lg $11.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Buffalo Chicken</div>
+        <div class="item-desc">Crispy chicken tenders, medium wing sauce, blue cheese, provolone, lettuce, tomato.</div>
+        <div class="item-price">Sm $8.50 <span>/</span> Lg $11.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Tuna Salad</div>
+        <div class="item-desc">House tuna salad, American cheese, mayo, lettuce, tomato, onions.</div>
+        <div class="item-price">Sm $8.50 <span>/</span> Lg $11.50</div>
+      </div>
+
+    </div>
+
+    <div class="sub-section-label" style="margin-top:28px;">— Hot Subs —</div>
+    <div class="items-grid">
+
+      <div class="item-card">
+        <div class="item-name">Meatball Parm</div>
+        <div class="item-desc">House meatballs, marinara sauce, melted provolone.</div>
+        <div class="item-price">Sm $9.00 <span>/</span> Lg $12.00</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Chicken Parm</div>
+        <div class="item-desc">Fried chicken cutlet, marinara sauce, melted provolone.</div>
+        <div class="item-price">Sm $9.00 <span>/</span> Lg $12.00</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Sausage & Peppers</div>
+        <div class="item-desc">Grilled Italian sausage, sautéed green peppers, onions, marinara, provolone.</div>
+        <div class="item-price">Sm $9.00 <span>/</span> Lg $12.00</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- FRIES + SIDES -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title">🍟 Fries & Sides</div>
+      </div>
+    </div>
+    <div class="items-grid">
+
+      <div class="item-card">
+        <div class="item-name">Regular Fries</div>
+        <div class="item-price">Sm $3.50 <span>/</span> Lg $4.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Curly Fries</div>
+        <div class="item-desc">Seasoned curly fries.</div>
+        <div class="item-price">Sm $4.00 <span>/</span> Lg $5.00</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Cheese Fries</div>
+        <div class="item-desc">Regular fries with cheddar or mozzarella.</div>
+        <div class="item-price">$6.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Curly Cheese Fries</div>
+        <div class="item-desc">Curly fries with cheddar cheese sauce.</div>
+        <div class="item-price">$7.00</div>
+      </div>
+
+      <div class="item-card featured">
+        <div class="item-name">Prince's Loaded Fries ★</div>
+        <div class="item-desc">Curly fries, cheddar cheese sauce, crispy bacon, ranch drizzle. The full royal treatment.</div>
+        <div class="item-price">$8.99</div>
+      </div>
+
+      <div class="item-card featured">
+        <div class="item-name">Prince Knots ★</div>
+        <div class="item-desc">Six house-made garlic knots with marinara dipping sauce. The move for every order.</div>
+        <div class="item-price">$5.99</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Mozzarella Sticks</div>
+        <div class="item-desc">Six sticks, served with marinara.</div>
+        <div class="item-price">$6.99</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Chicken Tenders</div>
+        <div class="item-desc">Five crispy tenders. Plain, buffalo, BBQ, or honey mustard.</div>
+        <div class="item-price">$7.99</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Wings</div>
+        <div class="item-desc">Mild, hot, BBQ, garlic parm, or honey mustard. Served with blue cheese or ranch.</div>
+        <div class="item-price">6pc $8.99 <span>/</span> 12pc $15.99</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Garlic Bread</div>
+        <div class="item-price">Plain $3.00 <span>/</span> With Cheese $4.00</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- DRINKS -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title">🥤 Drinks</div>
+      </div>
+    </div>
+    <div class="items-grid">
+
+      <div class="item-card">
+        <div class="item-name">Fountain Drink</div>
+        <div class="item-desc">Coke · Diet Coke · Sprite · Root Beer · Lemonade · Iced Tea</div>
+        <div class="item-price">$2.50</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">20oz Bottle</div>
+        <div class="item-desc">Coke · Diet Coke · Sprite · Water</div>
+        <div class="item-price">$2.75</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">2-Liter</div>
+        <div class="item-desc">Coke · Diet Coke · Sprite · Root Beer</div>
+        <div class="item-price">$4.25</div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-name">Spring Water</div>
+        <div class="item-price">$1.25</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- INFO BAR -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="info-bar">
+    <div class="info-item">
+      <div class="info-label">Delivery Minimum</div>
+      <div class="info-value">$15.00</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Delivery Fee</div>
+      <div class="info-value">$3.00</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Delivery Time</div>
+      <div class="info-value">45–60 min</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Pickup Time</div>
+      <div class="info-value">20–25 min</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Call to Order</div>
+      <div class="info-value" style="color:var(--green)">(717) 555-0190</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- FOOTER -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <footer class="footer">
+    <img src="/assets/logo_icon.png" alt="Pizza Prince"/>
+    <p>
+      Named after the Ninja Turtles episode where a turtle had to work off a debt at a pizza shop.<br/>
+      Lancaster, PA · The King of Slices · AI-Powered · Never Misses a Call
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>

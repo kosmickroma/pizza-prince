@@ -38,8 +38,14 @@ const app = express();
 app.use(express.json());
 
 // Serve the dashboard HTML from the dashboard/ folder
-// Visiting http://localhost:3000/dashboard serves dashboard/index.html
 app.use('/dashboard', express.static(path.join(__dirname, '..', 'dashboard')));
+
+// Menu pages
+app.get('/menu',       (req, res) => res.sendFile(path.join(__dirname, '..', 'dashboard', 'menu.html')));
+app.get('/menu/print', (req, res) => res.sendFile(path.join(__dirname, '..', 'dashboard', 'menu_print.html')));
+
+// Serve static assets (logo, etc.) for menu page
+app.use('/assets', express.static(path.join(__dirname, '..', 'assets')));
 
 // --- Routes --------------------------------------------------------------------
 
@@ -87,6 +93,7 @@ server.listen(PORT, () => {
   console.log('');
   console.log(`   Health:    http://localhost:${PORT}/health`);
   console.log(`   Dashboard: http://localhost:${PORT}/dashboard`);
+  console.log(`   Menu:      http://localhost:${PORT}/menu`);
   console.log(`   Demo:      http://localhost:${PORT}/demo/order`);
   console.log(`   WS:        ws://localhost:${PORT}/llm-websocket`);
   console.log('');

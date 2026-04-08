@@ -15,7 +15,7 @@
  * @exports setupLLMWebSocket(httpServer) - Attaches WebSocket server to Express HTTP server
  * 
  * @usedby server.js - Called after createServer(); shares port 3000 with HTTP
- * @listens ws://localhost:3000/llm-websocket - Retell connects here per call
+ * @listens wss://<ngrok-host>/llm-websocket/:call_id - Retell connects here per call
  */
 
 // This file is where Gemini and Retell talk to each other
@@ -23,6 +23,7 @@ import { WebSocketServer } from 'ws';
 import { GoogleGenAI }     from '@google/genai';
 import { buildSystemPrompt, TOOLS } from '../config/systemPrompt.js';
 import { sendOrderNotification } from '../services/telegram.js';
+import { broadcastEvent }        from '../routes/orders.js';
 
 // --- Gemini Client ------------------------------------------------
 
@@ -36,30 +37,57 @@ const SYSTEM_PROMPT = buildSystemPrompt();
 
 // --- Session Storage ------------------------------------------------
 
-// Each phone call gets its own conversation history.
-const sessions = new Map();
+// Each phone call gets its own conversation history + state.
+const sessions = new Map(); // callId → { history: [], orderSubmitted: false }
+
+// Tracks which calls have already submitted an order — prevents double-submit.
+const submittedCalls = new Set();
 
 // --- Setup Function ---------------------------------------------------------
 
 // Attach the WebSocket server to our Express HTTP server. Called once from server.js after the HTTP is created.
 export function setupLLMWebSocket(httpServer) {
 
-    const wss = new WebSocketServer({ server: httpServer, path: '/llm-websocket' });
+    // No static 'path' here — Retell connects to /llm-websocket/{call_id}
+    // so we match the prefix in handleProtocols/verifyClient and extract
+    // the call_id from the path segment ourselves.
+    const wss = new WebSocketServer({
+        server: httpServer,
+        verifyClient: ({ req }) => req.url.startsWith('/llm-websocket'),
+    });
 
-    console.log('🤖 LLM WebSocket server ready at /llm-websocket');
+    console.log('🤖 LLM WebSocket server ready at /llm-websocket/:call_id');
 
     // This callback runs every time Retell opens a new WebSocket connection.
     // Each phone call = one new connection.
     wss.on('connection', (ws, req) => {
         console.log('📞 Retell connected for a new call');
 
-        // Extract the call id from the URL query params.
-        const url     = new URL(req.url, `http://localhost`);
-        const callId  = url.searchParams.get('call_id') || `call_${Date.now()}`;
+        // Retell sends the call_id as a path segment: /llm-websocket/{call_id}
+        // e.g. req.url = "/llm-websocket/call_abc123"
+        const pathParts = req.url.split('/');
+        const callId    = pathParts[pathParts.length - 1] || `call_${Date.now()}`;
 
         // Start with an empty history for this call
         sessions.set(callId, []);
         console.log(`📞 Session started: ${callId}`);
+
+        // Tell the dashboard a call just started
+        broadcastEvent({ type: 'call_started', callId });
+
+        // Send greeting immediately on connect — don't wait for user to speak first
+        // Small delay gives the SIP/audio path time to fully establish
+        setTimeout(() => {
+            if (ws.readyState === ws.OPEN) {
+                ws.send(JSON.stringify({
+                    response_id:      0,
+                    content:          "Thanks for calling Pizza Prince — will this be for pickup or delivery?",
+                    content_complete: true,
+                    end_call:         false,
+                }));
+                console.log('👋 Greeting sent');
+            }
+        }, 500);
 
         // --- Incoming Message Handler -------------------------------------------------
 
@@ -69,15 +97,43 @@ export function setupLLMWebSocket(httpServer) {
                 // Retell sends JSON strings - parse to object
                 const message = JSON.parse(rawData.toString());
 
+                console.log(`📨 Retell message: interaction_type=${message.interaction_type} transcript_len=${message.transcript?.length ?? 'n/a'}`);
+
+                // First message of the call — transcript is empty, agent should greet first
+                const history = sessions.get(callId);
+                const isFirstTurn = message.transcript?.length === 0 ||
+                    (message.transcript?.length === 1 && message.transcript[0].content === '');
+
+                if (isFirstTurn && history.length === 0) {
+                    ws.send(JSON.stringify({
+                        response_id:      message.response_id ?? 0,
+                        content:          "Thanks for calling Pizza Prince — will this be for pickup or delivery?",
+                        content_complete: true,
+                        end_call:         false,
+                    }));
+                    return;
+                }
+
                 // We only respond to 'response_required' - that's when the caller has finished speaking and Retell needs our AI's reply.
                 if (message.interaction_type !== 'response_required' &&
                     message.interaction_type !== 'reminder_required') {
                         return;
                     }    
                     
-                    // Get this call's history and sync it with Retell's latest transcript
-                    const history = sessions.get(callId);
+                    // Sync history with Retell's latest transcript
                     syncHistory(history, message.transcript);
+
+                    // If the transcript is empty this is the very first turn — send the greeting
+                    // without hitting Gemini (faster, more reliable opening)
+                    if (history.length === 0) {
+                        ws.send(JSON.stringify({
+                            response_id:      message.response_id,
+                            content:          "Thanks for calling Pizza Prince — will this be for pickup or delivery?",
+                            content_complete: true,
+                            end_call:         false,
+                        }));
+                        return;
+                    }
 
                     // Ask Gemini for a response, (handles tool calls internally)
                     const responseText = await getGeminiResponse(callId, history);
@@ -91,10 +147,14 @@ export function setupLLMWebSocket(httpServer) {
                     }));
             } catch (err) {
                 console.error('❌ Error handling message from Retell:', err.message);
-                // Send a safe fallback so the call doesn't go silent
+                // If the order is already in, this is just a bad goodbye — send a clean one.
+                // If the order was never submitted, something actually went wrong — apologize.
+                const orderDone = submittedCalls.has(callId);
                 ws.send(JSON.stringify({
-                    response_id:     0,
-                    content:         'Sorry, I had a technical issue on my end. Let me get someone to call you right back.',
+                    response_id:      0,
+                    content:          orderDone
+                        ? "You're all set! Have a great day!"
+                        : 'Sorry, I had a technical issue on my end. Let me get someone to call you right back.',
                     content_complete: true,
                     end_call:         true,
                 }));
@@ -103,10 +163,12 @@ export function setupLLMWebSocket(httpServer) {
 
         // --- Cleanup on Disconnect -------------------------------------------------
 
-        // When the call ends, delete the session to free up memory.
+        // When the call ends, clean up session and submitted flag.
         ws.on('close', () => {
             sessions.delete(callId);
+            submittedCalls.delete(callId);
             console.log(`📴 Session ended: ${callId}`);
+            broadcastEvent({ type: 'call_ended', callId });
         });
     });
 }
@@ -150,7 +212,14 @@ async function getGeminiResponse(callId, history) {
 
         // Get the first (and usually only) candidate from the response
         const candidate = response.candidates[0];
-        const parts     = candidate.content.parts;
+
+        // Guard: Gemini sometimes returns a candidate with no content (safety block, etc.)
+        if (!candidate?.content?.parts) {
+            console.warn('⚠️  Gemini returned no content. Finish reason:', candidate?.finishReason);
+            return "Sorry about that, I had a hiccup. Can you repeat that?";
+        }
+
+        const parts = candidate.content.parts;
 
         // Add Gemini's response to history so it has context in the next loop
         history.push({ role: 'model', parts });
@@ -167,20 +236,26 @@ async function getGeminiResponse(callId, history) {
 
         // --- Tool Call Handling -------------------------------------------------
 
-        // Destructure the function call: name = which tool, args = the data, id = unique call ID
-        const { name, args, id } = functionCallPart.functionCall;
+        // Destructure the function call: name = which tool, args = the data
+        const { name, args } = functionCallPart.functionCall;
         console.log(`🔧 Tool call: ${name} (call: ${callId})`);
 
-        // Execute the tool and get a result string
-        const result = await executeTool(name, args);
+        // Block double-submission — if the order was already submitted this call, bail out
+        const isOrderTool = name === 'submit_order' || name === 'SubmitOrderCustomer';
+        if (isOrderTool && submittedCalls.has(callId)) {
+            console.warn(`⚠️  Duplicate order tool call blocked for ${callId}`);
+            return "You're all set — your order is already in. See you soon!";
+        }
 
-        // Add the function response to history.
+        // Execute the tool and get a result string
+        const result = await executeTool(name, args, callId);
+
+        // Add the function response to history (no id field — not needed in current SDK)
         history.push({
             role: 'user',
             parts: [{
                 functionResponse: {
                     name,
-                    id,
                     response: { result },
                 },
             }],
@@ -193,9 +268,10 @@ async function getGeminiResponse(callId, history) {
 // --- Tool Execution ---------------------------------------------------------
 
 // Run a tool that Gemini requested and return the result as a string.
-async function executeTool(name, args) {
+async function executeTool(name, args, callId) {
     try {
-        if (name === 'submit_order') {
+        // Handle both the correct name and Gemini's occasional hallucinated alias
+        if (name === 'submit_order' || name === 'SubmitOrderCustomer') {
             // POST the order to our own /orders endpoint.
             const response = await fetch(`http://localhost:${process.env.PORT || 3000}/orders`, {
                 method: 'POST',
@@ -205,17 +281,20 @@ async function executeTool(name, args) {
 
             const order = await response.json();
 
+            // Mark this call as submitted so we never double-submit
+            submittedCalls.add(callId);
+
             // Fire Telegram notification - don't await it so it doesn't slow the call.
-            sendOrderNotification(order).catch(err => 
+            sendOrderNotification(order).catch(err =>
                 console.warn('⚠️  Telegram notification failed:', err.message)
             );
 
-            return `Order ${order.order_id} submitted. Kitchen dashboard updated, owner notified.`;
+            return `Order ${order.order_id} confirmed. Total: $${order.total_price}. Kitchen notified.`;
         }
 
-        return `Unknown tool: ${name}`;     
+        return `Unknown tool: ${name}`;
     } catch (err) {
-      console.error(`❌ Tool error (${name}):`, err.message);
-    return `Tool failed: ${err.message}`;
+        console.error(`❌ Tool error (${name}):`, err.message);
+        return `Tool failed: ${err.message}`;
     }
 }

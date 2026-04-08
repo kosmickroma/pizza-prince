@@ -19,18 +19,23 @@ import { saveOrder, getOrders } from '../services/orderStore.js';
 const router  = express.Router();
 const clients = new Set();
 
-// --- Broadcast Helper ---------------------------------------------------------
+// --- Broadcast Helpers --------------------------------------------------------
 
 // Send an order to every connected dashboard browser.
 function broadcast(order) {
     const message = `data: ${JSON.stringify(order)}\n\n`;
-
-    // Loop through every connected browser and send them the message
     for (const client of clients) {
         client.write(message);
     }
-    
     console.log(`📣 Broadcasted order ${order.order_id} to ${clients.size} dashboard(s)`);
+}
+
+// Send any event payload to every connected dashboard (call state, etc.)
+export function broadcastEvent(payload) {
+    const message = `data: ${JSON.stringify(payload)}\n\n`;
+    for (const client of clients) {
+        client.write(message);
+    }
 }
 
 // --- SSE Stream Endpoint -----------------------------------------------------
